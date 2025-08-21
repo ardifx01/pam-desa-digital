@@ -150,6 +150,8 @@ export const getAssignedReports = async (fieldOfficerId: string): Promise<Proble
 
 export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' | 'status' | 'reportedAt' | 'assigneeId'>): Promise<ProblemReport> => {
   try {
+    console.log('submitProblemReport called with data:', reportData);
+    
     const newReport: Omit<ProblemReport, 'id'> = {
       ...reportData,
       status: ReportStatus.BARU,
@@ -157,12 +159,20 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       assigneeId: undefined
     };
 
+    console.log('Attempting to add document to Firestore with data:', newReport);
+    console.log('Firestore db instance:', db);
+    
     const docRef = await addDoc(collection(db, 'problemReports'), newReport);
     const createdReport = { id: docRef.id, ...newReport };
-    console.log('Problem report submitted to Firestore:', createdReport);
+    console.log('Problem report submitted to Firestore successfully:', createdReport);
     return createdReport;
   } catch (error) {
     console.error('Error submitting problem report:', error);
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    });
     throw error;
   }
 };

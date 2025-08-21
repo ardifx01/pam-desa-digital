@@ -2,6 +2,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../../App';
 import { submitProblemReport, getUserReports } from '../../../services/api';
+import { testFirebaseConnection } from '../../../services/firebase';
 import { ProblemReport, ReportStatus } from '../../../types';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
@@ -19,6 +20,18 @@ const ReportProblem: React.FC = () => {
 
   const [reports, setReports] = useState<ProblemReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [firebaseStatus, setFirebaseStatus] = useState<'unknown' | 'testing' | 'connected' | 'failed'>('unknown');
+
+  const testConnection = async () => {
+    setFirebaseStatus('testing');
+    try {
+      const isConnected = await testFirebaseConnection();
+      setFirebaseStatus(isConnected ? 'connected' : 'failed');
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      setFirebaseStatus('failed');
+    }
+  };
 
   const fetchReports = React.useCallback(() => {
     if (user) {
@@ -42,7 +55,29 @@ const ReportProblem: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      console.error('No user found in context');
+      setError('User tidak ditemukan. Silakan login ulang.');
+      return;
+    }
+    
+    // Validate required fields
+    if (!title.trim()) {
+      setError('Judul laporan harus diisi');
+      return;
+    }
+    if (!description.trim()) {
+      setError('Deskripsi harus diisi');
+      return;
+    }
+    if (!location.trim()) {
+      setError('Lokasi harus diisi');
+      return;
+    }
+    
+    console.log('Submitting report with user:', user);
+    console.log('Report data:', { title, description, location, photo: photo?.name });
+    
     setSubmitting(true);
     setError('');
     setSuccess(false);
@@ -51,13 +86,14 @@ const ReportProblem: React.FC = () => {
     const photoUrl = photo ? URL.createObjectURL(photo) : undefined;
     
     try {
-      await submitProblemReport({
+      const result = await submitProblemReport({
         userId: user.id,
-        title,
-        description,
-        location,
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim(),
         photoUrl,
       });
+      console.log('Report submitted successfully:', result);
       setSuccess(true);
       setTitle('');
       setDescription('');
@@ -65,7 +101,12 @@ const ReportProblem: React.FC = () => {
       setPhoto(null);
       fetchReports(); // Refresh list
     } catch (err) {
-      setError('Gagal mengirim laporan. Silakan coba lagi.');
+      console.error('Error submitting report:', err);
+      if (err instanceof Error) {
+        setError(`Gagal mengirim laporan: ${err.message}`);
+      } else {
+        setError('Gagal mengirim laporan. Silakan coba lagi.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -87,6 +128,25 @@ const ReportProblem: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
             <Card title="Form Laporan Masalah">
+                {/* Debug Info - Remove in production */}
+                {process.env.NODE_ENV === 'development' && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-xs">
+                    <strong>Debug Info:</strong><br/>
+                    User ID: {user?.id || 'Not found'}<br/>
+                    User Role: {user?.role || 'Not found'}<br/>
+                    User Email: {user?.email || 'Not found'}<br/>
+                    <br/>
+                    <strong>Firebase Status:</strong> {firebaseStatus}<br/>
+                    <button 
+                      onClick={testConnection}
+                      disabled={firebaseStatus === 'testing'}
+                      className="mt-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 disabled:opacity-50"
+                    >
+                      {firebaseStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+                    </button>
+                  </div>
+                )}
+                
                 <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="title" className="block text-sm font-medium text-slate-700">Judul Laporan</label>

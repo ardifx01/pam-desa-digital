@@ -151,6 +151,13 @@ export const getAssignedReports = async (fieldOfficerId: string): Promise<Proble
 export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' | 'status' | 'reportedAt' | 'assigneeId'>): Promise<ProblemReport> => {
   try {
     console.log('submitProblemReport called with data:', reportData);
+    console.log('Data types:', {
+      userId: typeof reportData.userId,
+      title: typeof reportData.title,
+      description: typeof reportData.description,
+      location: typeof reportData.location,
+      photoUrl: typeof reportData.photoUrl
+    });
     
     const newReport: Omit<ProblemReport, 'id'> = {
       ...reportData,
@@ -161,6 +168,16 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
 
     console.log('Attempting to add document to Firestore with data:', newReport);
     console.log('Firestore db instance:', db);
+    console.log('Collection name: problemReports');
+    
+    // Test if we can access the collection
+    try {
+      const testQuery = await getDocs(collection(db, 'problemReports'));
+      console.log('Collection access test successful, document count:', testQuery.size);
+    } catch (collectionError) {
+      console.error('Collection access test failed:', collectionError);
+      throw new Error(`Cannot access problemReports collection: ${collectionError instanceof Error ? collectionError.message : 'Unknown error'}`);
+    }
     
     const docRef = await addDoc(collection(db, 'problemReports'), newReport);
     const createdReport = { id: docRef.id, ...newReport };
@@ -173,7 +190,13 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : 'No stack trace'
     });
-    throw error;
+    
+    // Re-throw with more context
+    if (error instanceof Error) {
+      throw new Error(`Failed to submit problem report: ${error.message}`);
+    } else {
+      throw new Error('Failed to submit problem report: Unknown error occurred');
+    }
   }
 };
 

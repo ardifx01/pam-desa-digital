@@ -33,6 +33,51 @@ const ReportProblem: React.FC = () => {
     }
   };
 
+  const testFirestoreWrite = async () => {
+    try {
+      console.log('Testing Firestore write operation...');
+      const testData = {
+        test: true,
+        timestamp: new Date().toISOString(),
+        userId: user?.id || 'test'
+      };
+      
+      // Try to write a test document
+      const { addDoc, collection } = await import('firebase/firestore');
+      const { db } = await import('../../../services/firebase');
+      
+      const docRef = await addDoc(collection(db, 'testCollection'), testData);
+      console.log('Test write successful:', docRef.id);
+      
+      // Clean up - delete the test document
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      await deleteDoc(doc(db, 'testCollection', docRef.id));
+      console.log('Test document cleaned up');
+      
+      alert('Firestore write test successful!');
+    } catch (error) {
+      console.error('Firestore write test failed:', error);
+      alert(`Firestore write test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const testFormSubmission = () => {
+    console.log('=== FORM SUBMISSION TEST ===');
+    console.log('Form data:', {
+      title: title,
+      description: description,
+      location: location,
+      photo: photo ? photo.name : 'No photo'
+    });
+    console.log('User context:', user);
+    console.log('Form validation:', {
+      titleValid: title.trim().length > 0,
+      descriptionValid: description.trim().length > 0,
+      locationValid: location.trim().length > 0,
+      userValid: !!user
+    });
+  };
+
   const fetchReports = React.useCallback(() => {
     if (user) {
         setLoadingReports(true);
@@ -143,6 +188,20 @@ const ReportProblem: React.FC = () => {
                       className="mt-2 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 disabled:opacity-50"
                     >
                       {firebaseStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+                    </button>
+                    <br/>
+                    <button 
+                      onClick={testFirestoreWrite}
+                      className="mt-2 px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                    >
+                      Test Firestore Write
+                    </button>
+                    <br/>
+                    <button 
+                      onClick={testFormSubmission}
+                      className="mt-2 px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"
+                    >
+                      Test Form Data
                     </button>
                   </div>
                 )}

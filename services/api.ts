@@ -162,6 +162,14 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     // Check if reportData has any unexpected fields
     console.log('All fields in reportData:', Object.keys(reportData));
     console.log('reportData.assigneeId:', (reportData as any).assigneeId);
+    console.log('Full reportData object:', JSON.stringify(reportData, null, 2));
+    
+    // Validate that assigneeId is not present in input data
+    if ('assigneeId' in reportData) {
+      console.error('ERROR: assigneeId should not be present in user-submitted data!');
+      console.error('reportData.assigneeId value:', (reportData as any).assigneeId);
+      throw new Error('assigneeId field is not allowed in user-submitted reports');
+    }
     
     // Explicitly create newReport without assigneeId to avoid any undefined values
     const newReport: Omit<ProblemReport, 'id'> = {
@@ -174,15 +182,23 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       reportedAt: new Date().toISOString()
     };
 
-    // Filter out any undefined values before sending to Firebase
+    // Filter out any undefined values and ensure no assigneeId field
     const cleanReport = Object.fromEntries(
-      Object.entries(newReport).filter(([key, value]) => value !== undefined)
+      Object.entries(newReport).filter(([key, value]) => {
+        // Remove undefined values
+        if (value === undefined) return false;
+        // Explicitly exclude assigneeId field
+        if (key === 'assigneeId') return false;
+        return true;
+      })
     );
     
     console.log('Attempting to add document to Firestore with data:', newReport);
     console.log('newReport.assigneeId:', (newReport as any).assigneeId);
     console.log('All fields in newReport:', Object.keys(newReport));
     console.log('Clean report (no undefined values):', cleanReport);
+    console.log('Clean report fields:', Object.keys(cleanReport));
+    console.log('Clean report has assigneeId?', 'assigneeId' in cleanReport);
     console.log('Firestore db instance:', db);
     console.log('Collection name: problemReports');
     

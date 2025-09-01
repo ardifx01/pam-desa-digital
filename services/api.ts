@@ -159,6 +159,10 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       photoUrl: typeof reportData.photoUrl
     });
     
+    // Check if reportData has any unexpected fields
+    console.log('All fields in reportData:', Object.keys(reportData));
+    console.log('reportData.assigneeId:', (reportData as any).assigneeId);
+    
     const newReport: Omit<ProblemReport, 'id'> = {
       ...reportData,
       status: ReportStatus.BARU,
@@ -166,6 +170,8 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     };
 
     console.log('Attempting to add document to Firestore with data:', newReport);
+    console.log('newReport.assigneeId:', (newReport as any).assigneeId);
+    console.log('All fields in newReport:', Object.keys(newReport));
     console.log('Firestore db instance:', db);
     console.log('Collection name: problemReports');
     

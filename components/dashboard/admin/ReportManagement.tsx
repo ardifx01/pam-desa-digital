@@ -171,7 +171,7 @@ const ReportManagement: React.FC = () => {
                         value={report.assigneeId || ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const updateData = value ? { assigneeId: value } : { assigneeId: undefined };
+                          const updateData = value ? { assigneeId: value } : {};
                           handleUpdate(report.id, updateData);
                         }}
                         className="text-sm rounded-md border-slate-300 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"

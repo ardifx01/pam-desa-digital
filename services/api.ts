@@ -125,15 +125,19 @@ export const getAllProblemReports = async (): Promise<ProblemReport[]> => {
 
 export const getUserReports = async (userId: string): Promise<ProblemReport[]> => {
   try {
+    // First get all reports for the user, then sort in JavaScript to avoid index requirement
     const q = query(
       collection(db, 'problemReports'),
-      where('userId', '==', userId),
-      orderBy('reportedAt', 'desc')
+      where('userId', '==', userId)
     );
     const querySnapshot = await getDocs(q);
     const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as ProblemReport);
-    console.log('Reports fetched from Firestore:', reports);
-    return reports;
+    
+    // Sort by reportedAt in descending order in JavaScript
+    const sortedReports = reports.sort((a, b) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime());
+    
+    console.log('Reports fetched from Firestore:', sortedReports);
+    return sortedReports;
   } catch (error) {
     console.error('Error fetching user reports:', error);
     throw error;
@@ -142,11 +146,16 @@ export const getUserReports = async (userId: string): Promise<ProblemReport[]> =
 
 export const getAssignedReports = async (fieldOfficerId: string): Promise<ProblemReport[]> => {
   try {
-    const q = query(collection(db, 'problemReports'), where('assigneeId', '==', fieldOfficerId), orderBy('reportedAt', 'desc'));
+    // First get all reports assigned to the field officer, then sort in JavaScript to avoid index requirement
+    const q = query(collection(db, 'problemReports'), where('assigneeId', '==', fieldOfficerId));
     const querySnapshot = await getDocs(q);
     const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as ProblemReport);
-    console.log('Assigned reports fetched from Firestore:', reports);
-    return reports;
+    
+    // Sort by reportedAt in descending order in JavaScript
+    const sortedReports = reports.sort((a, b) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime());
+    
+    console.log('Assigned reports fetched from Firestore:', sortedReports);
+    return sortedReports;
   } catch (error) {
     console.error('Error fetching assigned reports:', error);
     throw error;

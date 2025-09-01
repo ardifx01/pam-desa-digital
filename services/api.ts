@@ -93,11 +93,16 @@ export const addUser = async (userData: Omit<User, 'id' | 'customerNumber' | 'av
 // User Data
 export const getUserBills = async (userId: string): Promise<Bill[]> => {
   try {
-    const q = query(collection(db, 'bills'), where('userId', '==', userId), orderBy('dueDate', 'desc'));
+    // First get all bills for the user, then sort in JavaScript to avoid index requirement
+    const q = query(collection(db, 'bills'), where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     const bills = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Bill);
-    console.log('Bills fetched from Firestore:', bills);
-    return bills;
+    
+    // Sort by dueDate in descending order in JavaScript
+    const sortedBills = bills.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+    
+    console.log('Bills fetched from Firestore:', sortedBills);
+    return sortedBills;
   } catch (error) {
     console.error('Error fetching user bills:', error);
     throw error;

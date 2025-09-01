@@ -152,7 +152,16 @@ const ReportManagement: React.FC = () => {
               </div>
               <p className="mt-2 text-slate-600">{report.description}</p>
               <p className="mt-1 text-sm text-slate-500"><strong>Lokasi:</strong> {report.location}</p>
-              {report.photoUrl && <img src={report.photoUrl} alt="Problem" className="mt-2 rounded-lg max-h-48 w-auto" />}
+              {report.photoUrl && !report.photoUrl.startsWith('blob:') && (
+                <img 
+                  src={report.photoUrl} 
+                  alt="Problem" 
+                  className="mt-2 rounded-lg max-h-48 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
 
               <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-full sm:w-auto">
@@ -171,7 +180,7 @@ const ReportManagement: React.FC = () => {
                         value={report.assigneeId || ''}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const updateData = value ? { assigneeId: value } : {};
+                          const updateData = value ? { assigneeId: value } : { assigneeId: undefined };
                           handleUpdate(report.id, updateData);
                         }}
                         className="text-sm rounded-md border-slate-300 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"

@@ -78,7 +78,16 @@ const ReportAssignments: React.FC = () => {
               </div>
               <p className="mt-2 text-slate-600">{report.description}</p>
               <p className="mt-1 text-sm text-slate-500"><strong>Lokasi:</strong> {report.location}</p>
-              {report.photoUrl && <img src={report.photoUrl} alt="Problem" className="mt-2 rounded-lg max-h-48 w-auto" />}
+              {report.photoUrl && !report.photoUrl.startsWith('blob:') && (
+                <img 
+                  src={report.photoUrl} 
+                  alt="Problem" 
+                  className="mt-2 rounded-lg max-h-48 w-auto"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              )}
 
               <div className="mt-4 pt-4 border-t border-slate-200 flex items-center gap-4">
                 <label className="text-sm font-medium text-slate-700">Perbarui Status:</label>

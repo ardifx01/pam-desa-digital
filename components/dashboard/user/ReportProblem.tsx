@@ -127,8 +127,9 @@ const ReportProblem: React.FC = () => {
     setError('');
     setSuccess(false);
     
-    // In a real app, upload photo to Firebase Storage and get URL
-    const photoUrl = photo ? URL.createObjectURL(photo) : undefined;
+    // For now, we'll skip photo upload to avoid blob URL issues
+    // In a real app, upload photo to Firebase Storage and get permanent URL
+    const photoUrl = undefined; // Temporarily disabled to avoid blob URL issues
     
     try {
       const result = await submitProblemReport({
@@ -262,7 +263,16 @@ const ReportProblem: React.FC = () => {
                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(report.status)}`}>{report.status}</span>
                             </div>
                             <p className="mt-2 text-sm text-slate-600">{report.description}</p>
-                            {report.photoUrl && <img src={report.photoUrl} alt="Problem" className="mt-2 rounded-lg max-h-40"/>}
+                            {report.photoUrl && !report.photoUrl.startsWith('blob:') && (
+                              <img 
+                                src={report.photoUrl} 
+                                alt="Problem" 
+                                className="mt-2 rounded-lg max-h-40"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            )}
                         </div>
                     ))}
                   </div>

@@ -182,23 +182,26 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       reportedAt: new Date().toISOString()
     } as const;
 
-    // Create clean report with only allowed fields
-    const cleanReport = {
-      userId: newReport.userId,
-      title: newReport.title,
-      description: newReport.description,
-      location: newReport.location,
-      photoUrl: newReport.photoUrl,
-      status: newReport.status,
-      reportedAt: newReport.reportedAt
-    };
+    // Create clean report with only allowed fields and filter out undefined values
+    const cleanReport: any = {};
+    
+    // Add fields only if they are not undefined
+    if (newReport.userId !== undefined) cleanReport.userId = newReport.userId;
+    if (newReport.title !== undefined) cleanReport.title = newReport.title;
+    if (newReport.description !== undefined) cleanReport.description = newReport.description;
+    if (newReport.location !== undefined) cleanReport.location = newReport.location;
+    if (newReport.photoUrl !== undefined) cleanReport.photoUrl = newReport.photoUrl;
+    if (newReport.status !== undefined) cleanReport.status = newReport.status;
+    if (newReport.reportedAt !== undefined) cleanReport.reportedAt = newReport.reportedAt;
     
     console.log('Attempting to add document to Firestore with data:', newReport);
     console.log('newReport.assigneeId:', (newReport as any).assigneeId);
+    console.log('newReport.photoUrl:', newReport.photoUrl, 'type:', typeof newReport.photoUrl);
     console.log('All fields in newReport:', Object.keys(newReport));
     console.log('Clean report (no undefined values):', cleanReport);
     console.log('Clean report fields:', Object.keys(cleanReport));
     console.log('Clean report has assigneeId?', 'assigneeId' in cleanReport);
+    console.log('Clean report photoUrl:', cleanReport.photoUrl, 'type:', typeof cleanReport.photoUrl);
     
     // Final validation - ensure no assigneeId field
     if ('assigneeId' in cleanReport) {

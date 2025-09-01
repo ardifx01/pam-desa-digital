@@ -163,15 +163,26 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     console.log('All fields in reportData:', Object.keys(reportData));
     console.log('reportData.assigneeId:', (reportData as any).assigneeId);
     
+    // Explicitly create newReport without assigneeId to avoid any undefined values
     const newReport: Omit<ProblemReport, 'id'> = {
-      ...reportData,
+      userId: reportData.userId,
+      title: reportData.title,
+      description: reportData.description,
+      location: reportData.location,
+      photoUrl: reportData.photoUrl,
       status: ReportStatus.BARU,
       reportedAt: new Date().toISOString()
     };
 
+    // Filter out any undefined values before sending to Firebase
+    const cleanReport = Object.fromEntries(
+      Object.entries(newReport).filter(([key, value]) => value !== undefined)
+    );
+    
     console.log('Attempting to add document to Firestore with data:', newReport);
     console.log('newReport.assigneeId:', (newReport as any).assigneeId);
     console.log('All fields in newReport:', Object.keys(newReport));
+    console.log('Clean report (no undefined values):', cleanReport);
     console.log('Firestore db instance:', db);
     console.log('Collection name: problemReports');
     
@@ -184,8 +195,8 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       throw new Error(`Cannot access problemReports collection: ${collectionError instanceof Error ? collectionError.message : 'Unknown error'}`);
     }
     
-    const docRef = await addDoc(collection(db, 'problemReports'), newReport);
-    const createdReport = { id: docRef.id, ...newReport };
+    const docRef = await addDoc(collection(db, 'problemReports'), cleanReport);
+    const createdReport = { id: docRef.id, ...cleanReport };
     console.log('Problem report submitted to Firestore successfully:', createdReport);
     return createdReport;
   } catch (error) {

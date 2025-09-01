@@ -1,6 +1,6 @@
 import { User, UserRole, Bill, ProblemReport, Tariff, ReportStatus } from '../types';
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, orderBy, addDoc, deleteField } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, addDoc, deleteField } from 'firebase/firestore';
 // Firebase Auth is not used in this app; authentication is simulated via Firestore users
 
 // --- AUTH FUNCTIONS ---
@@ -272,7 +272,7 @@ export const updateProblemReport = async (reportId: string, data: Partial<Proble
 
 // Admin Data
 export const getAllBills = async (): Promise<Bill[]> => {
-  const querySnapshot = await getDocs(query(collection(db, 'bills'), orderBy('dueDate', 'desc')));
+  const querySnapshot = await getDocs(collection(db, 'bills'));
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bill));
 };
 
@@ -292,9 +292,13 @@ export const updateTariff = async (tariffId: string, data: Partial<Tariff>): Pro
 
 export const addMeterReading = async (userId: string, reading: number): Promise<Bill> => {
   // Ambil bill terakhir user
-  const q = query(collection(db, 'bills'), where('userId', '==', userId), orderBy('dueDate', 'desc'));
+  const q = query(collection(db, 'bills'), where('userId', '==', userId));
   const querySnapshot = await getDocs(q);
-  const lastBill = querySnapshot.docs[0]?.data() as Bill | undefined;
+  const bills = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Bill);
+  
+  // Sort by dueDate in descending order in JavaScript to get the latest bill
+  const sortedBills = bills.sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+  const lastBill = sortedBills[0];
   const lastReading = lastBill ? lastBill.currentReading : 0;
   const usage = reading - lastReading;
   // Ambil tarif standar

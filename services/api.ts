@@ -172,7 +172,7 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     }
     
     // Explicitly create newReport without assigneeId to avoid any undefined values
-    const newReport: Omit<ProblemReport, 'id'> = {
+    const newReport = {
       userId: reportData.userId,
       title: reportData.title,
       description: reportData.description,
@@ -180,18 +180,18 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
       photoUrl: reportData.photoUrl,
       status: ReportStatus.BARU,
       reportedAt: new Date().toISOString()
-    };
+    } as const;
 
-    // Filter out any undefined values and ensure no assigneeId field
-    const cleanReport = Object.fromEntries(
-      Object.entries(newReport).filter(([key, value]) => {
-        // Remove undefined values
-        if (value === undefined) return false;
-        // Explicitly exclude assigneeId field
-        if (key === 'assigneeId') return false;
-        return true;
-      })
-    );
+    // Create clean report with only allowed fields
+    const cleanReport = {
+      userId: newReport.userId,
+      title: newReport.title,
+      description: newReport.description,
+      location: newReport.location,
+      photoUrl: newReport.photoUrl,
+      status: newReport.status,
+      reportedAt: newReport.reportedAt
+    };
     
     console.log('Attempting to add document to Firestore with data:', newReport);
     console.log('newReport.assigneeId:', (newReport as any).assigneeId);
@@ -199,6 +199,12 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     console.log('Clean report (no undefined values):', cleanReport);
     console.log('Clean report fields:', Object.keys(cleanReport));
     console.log('Clean report has assigneeId?', 'assigneeId' in cleanReport);
+    
+    // Final validation - ensure no assigneeId field
+    if ('assigneeId' in cleanReport) {
+      console.error('CRITICAL ERROR: cleanReport still contains assigneeId field!');
+      throw new Error('cleanReport contains assigneeId field - this should never happen');
+    }
     console.log('Firestore db instance:', db);
     console.log('Collection name: problemReports');
     

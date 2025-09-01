@@ -17,6 +17,7 @@ export const WaterDropIcon: React.FC<{ className?: string }> = ({ className }) =
 const UserOverview: React.FC<{ setActiveView: (view: string) => void }> = ({ setActiveView }) => {
   const { user } = useContext(AuthContext);
   const [unpaidBill, setUnpaidBill] = useState<Bill | null | undefined>(undefined);
+  const [allBills, setAllBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,12 +25,14 @@ const UserOverview: React.FC<{ setActiveView: (view: string) => void }> = ({ set
       setLoading(true);
       getUserBills(user.id)
         .then(bills => {
+          setAllBills(bills);
           const firstUnpaid = bills.find(b => b.status === 'unpaid');
           setUnpaidBill(firstUnpaid || null);
           setLoading(false);
         })
         .catch(error => {
           console.error('Error fetching bills for overview:', error);
+          setAllBills([]);
           setUnpaidBill(null);
           setLoading(false);
         });
@@ -133,6 +136,12 @@ const UserOverview: React.FC<{ setActiveView: (view: string) => void }> = ({ set
                 </p>
               </div>
               <Button onClick={() => setActiveView('bills')} className="w-full" size="lg">Bayar Sekarang</Button>
+            </div>
+          ) : allBills.length === 0 ? (
+            <div className="text-center py-8">
+              <BillIcon className="w-16 h-16 mx-auto text-slate-400 mb-4" />
+              <h3 className="text-xl font-semibold text-slate-800">Belum Ada Tagihan</h3>
+              <p className="text-slate-500 mt-1">Tagihan akan muncul setelah pembacaan meter pertama</p>
             </div>
           ) : (
             <div className="text-center py-8">

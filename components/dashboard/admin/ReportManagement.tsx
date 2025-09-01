@@ -169,7 +169,11 @@ const ReportManagement: React.FC = () => {
                     <label className="text-sm font-medium text-slate-700 mr-2">Tugaskan ke:</label>
                     <select
                         value={report.assigneeId || ''}
-                        onChange={(e) => handleUpdate(report.id, { assigneeId: e.target.value || undefined })}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const updateData = value ? { assigneeId: value } : { assigneeId: undefined };
+                          handleUpdate(report.id, updateData);
+                        }}
                         className="text-sm rounded-md border-slate-300 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50"
                     >
                         <option value="">-- Belum Ditugaskan --</option>

@@ -1,6 +1,6 @@
 import { User, UserRole, Bill, ProblemReport, Tariff, ReportStatus } from '../types';
 import { db } from './firebase';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, orderBy, addDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, query, where, orderBy, addDoc, deleteField } from 'firebase/firestore';
 // Firebase Auth is not used in this app; authentication is simulated via Firestore users
 
 // --- AUTH FUNCTIONS ---
@@ -162,8 +162,7 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
     const newReport: Omit<ProblemReport, 'id'> = {
       ...reportData,
       status: ReportStatus.BARU,
-      reportedAt: new Date().toISOString(),
-      assigneeId: undefined
+      reportedAt: new Date().toISOString()
     };
 
     console.log('Attempting to add document to Firestore with data:', newReport);
@@ -202,7 +201,14 @@ export const submitProblemReport = async (reportData: Omit<ProblemReport, 'id' |
 
 export const updateProblemReport = async (reportId: string, data: Partial<ProblemReport>): Promise<ProblemReport> => {
   const reportRef = doc(db, 'problemReports', reportId);
-  await updateDoc(reportRef, data);
+  
+  // Handle assigneeId field properly - if it's undefined, remove it from the document
+  const updateData: any = { ...data };
+  if ('assigneeId' in updateData && updateData.assigneeId === undefined) {
+    updateData.assigneeId = deleteField();
+  }
+  
+  await updateDoc(reportRef, updateData);
   const updated = await getDoc(reportRef);
   return { id: updated.id, ...updated.data() } as ProblemReport;
 };

@@ -125,12 +125,19 @@ export const getAllProblemReports = async (): Promise<ProblemReport[]> => {
 
 export const getUserReports = async (userId: string): Promise<ProblemReport[]> => {
   try {
+    console.log('getUserReports called with userId:', userId);
+    console.log('Using simple query without orderBy to avoid index requirement');
+    
     // First get all reports for the user, then sort in JavaScript to avoid index requirement
     const q = query(
       collection(db, 'problemReports'),
       where('userId', '==', userId)
     );
+    
+    console.log('Executing query:', q);
     const querySnapshot = await getDocs(q);
+    console.log('Query executed successfully, got', querySnapshot.size, 'documents');
+    
     const reports = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as ProblemReport);
     
     // Sort by reportedAt in descending order in JavaScript
@@ -140,6 +147,11 @@ export const getUserReports = async (userId: string): Promise<ProblemReport[]> =
     return sortedReports;
   } catch (error) {
     console.error('Error fetching user reports:', error);
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      code: (error as any)?.code
+    });
     throw error;
   }
 };
